@@ -1,0 +1,61 @@
+# =====================================================
+# CRITICAL: NEVER UPLOAD PERSONAL DATA TO GITHUB
+# =====================================================
+
+# Personal Data Files - NEVER COMMIT
+price_history.db
+price_history.db-*
+tracked_coins.json
+*.backup
+*.old
+
+# Backup Directory - Contains User Portfolio Data
+backups/
+backup-*/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# User-specific files
+config.local.json
+secrets.json
