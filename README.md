@@ -1,6 +1,6 @@
 # 🏦 RJTVentures Crypto Tracker
 
-A self-hosted cryptocurrency portfolio tracker with a professional banker green theme. Track your crypto holdings, monitor prices in real-time, maintain a watchlist, and keep complete transaction history - all running locally on your own machine.
+A self-hosted cryptocurrency portfolio tracker. Track your crypto holdings, monitor prices in real-time, maintain a watchlist, and keep complete transaction history - all running locally on your own machine.
 
 ![Version](https://img.shields.io/badge/version-1.3-success)
 ![License](https://img.shields.io/badge/license-MIT-blue)
