@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/27228756/README.md)
+[README.md](https://github.com/user-attachments/files/27228817/README.md)
 # RJTVentures Crypto Tracker v2.0
 
 A comprehensive, self-hosted cryptocurrency portfolio tracker with support for traditional assets, liabilities, budget management, and automated backups.
