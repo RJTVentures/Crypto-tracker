@@ -1,363 +1,250 @@
-# 🏦 RJTVentures Crypto Tracker
+[README.md](https://github.com/user-attachments/files/27228756/README.md)
+# RJTVentures Crypto Tracker v2.0
 
-A self-hosted cryptocurrency portfolio tracker. Track your crypto holdings, monitor prices in real-time, maintain a watchlist, and keep complete transaction history - all running locally on your own machine.
+A comprehensive, self-hosted cryptocurrency portfolio tracker with support for traditional assets, liabilities, budget management, and automated backups.
 
-![Version](https://img.shields.io/badge/version-1.3-success)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Python](https://img.shields.io/badge/python-3.8+-blue)
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## ✨ Features
+## 🌟 Features
 
-### 📊 Portfolio Tracking
-- Track holdings across multiple wallets and exchanges
-- Real-time price updates every 5 minutes
-- 24-hour price change tracking
-- Portfolio performance charts
-- Cost basis and profit/loss calculations
+### Portfolio Management
+- **Multi-Source Holdings**: Track crypto across hardware wallets, exchanges (CoinSpot, etc.)
+- **Traditional Assets**: Manage property, superannuation, and other investments
+- **Liabilities Tracking**: Monitor mortgages, loans, and debts with interest calculations
+- **Metals Support**: Track gold and silver holdings
+- **Real-Time Pricing**: Live price updates from CoinGecko API
+- **24h Change Tracking**: Historical price change calculated from local database
 
-### 👀 Watchlist
-- Track coins before buying
-- Personal notes for each coin
-- Live price updates
-- Quick conversion to holdings
+### Transaction Management
+- **Complete History**: Buy, Sell, Swap, Transfer, Send transactions
+- **Fee Tracking**: Capture and analyze transaction fees across all operations
+- **Staking Rewards**: Track rewards with automatic portfolio integration
+- **CSV Export**: Export transaction history for accounting/tax purposes
 
-### 📈 Price History
-- Automatic 5-minute price snapshots
-- Historical price charts
-- 365-day retention
-- SQLite database storage
+### Budget & Planning
+- **Income/Expense Tracking**: Categorized with frequency (weekly, fortnightly, monthly, yearly)
+- **Asset Assignment**: Link income/expenses to specific investments
+- **Custom Categories**: Create your own budget categories
+- **Filter Views**: Show all, income only, or expenses only
 
-### 💾 Backup & Restore
-- Server-side backups
-- Export/Import as JSON
-- 30-day backup retention
-- Browse and restore previous backups
+### Analytics & Visualization
+- **Portfolio Charts**: Distribution across crypto, metals, and traditional assets
+- **Category Breakdowns**: Visualize holdings by investment category
+- **Performance Tracking**: Historical portfolio value over time
+- **Profit/Loss Analysis**: Track gains/losses across all holdings
 
-### 🎨 Professional Design
-- Banker green/gold color scheme
-- Clean, modern interface
-- Responsive design
-- Smooth animations
+### Data Management
+- **Automatic Backups**: Daily automated backups to server
+- **Manual Backups**: Export/import portfolio data as JSON
+- **Price History Database**: Local SQLite database stores price data every 5 minutes
+- **Browse Backups**: View and restore from previous backups
 
-## 🚀 Quick Start
+### Watchlist
+- **Coin Monitoring**: Track coins you don't own yet
+- **Quick Buy**: Convert watchlist items to holdings with one click
+- **Custom Notes**: Add notes to watchlist items
 
-### Prerequisites
-- Python 3.8 or higher
+## 📋 Requirements
+
+### Frontend
 - Modern web browser (Chrome, Firefox, Safari, Edge)
-- macOS, Linux, or Windows
+- JavaScript enabled
+- LocalStorage support
 
-### Installation
+### Backend (Server)
+- Python 3.8+
+- Required packages:
+  ```bash
+  pip install requests sqlite3 --break-system-packages
+  ```
 
-1. **Clone the repository**
+## 🚀 Installation
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/yourusername/rjtventures-crypto-tracker.git
 cd rjtventures-crypto-tracker
 ```
 
-2. **Run the installation script**
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-Or manually:
-
-3. **Start the server**
+### 2. Start the Server
 ```bash
 python3 server_coingecko.py
 ```
 
-4. **Open your browser**
+The server will:
+- Start on `http://localhost:2816`
+- Create `price_history.db` for historical price data
+- Create `backups/` directory for automatic backups
+- Begin fetching prices every 10 minutes (configurable)
+
+### 3. Open the Tracker
+Open `tracker-v2.0-COMPLETE.html` in your web browser, or navigate to:
 ```
-http://localhost:8080
+http://localhost:2816/tracker-v2.0-COMPLETE.html
 ```
 
-That's it! 🎉
+## ⚙️ Configuration
 
-## 📖 Usage Guide
+### Server Settings
+Edit `server_coingecko.py`:
 
-### Adding Your First Holding
+```python
+PORT = 2816  # Change server port
+UPDATE_INTERVAL = 600  # Price update frequency (seconds)
+```
 
-1. Click the **"Add Holding"** button in the Holdings section
-2. Enter the cryptocurrency name or symbol (e.g., "bitcoin" or "BTC")
-3. Enter the amount you own
-4. Select the source (Hardware Wallet, CoinSpot, etc.)
-5. Click **"Add to Portfolio"**
+### Tracker Settings
+Click the ⚙️ Settings icon to configure:
+- Portfolio name
+- Default view modes
+- Sort preferences
 
-The tracker will automatically fetch the current price and calculate your holding value.
+## 📊 Usage
 
-### Using the Watchlist
-
-1. Navigate to the **Watchlist** section
-2. Click **"+ Add to Watchlist"**
-3. Enter the coin name or symbol
-4. Optionally add notes (e.g., "Waiting for dip below $0.80")
-5. Price history starts building immediately!
-
-When you're ready to buy, click **"💰 Buy This"** to move it to your holdings.
+### Adding Holdings
+1. Click **+ Add Crypto** button
+2. Enter coin name/symbol
+3. Specify amount and source (wallet/exchange)
+4. Optionally add purchase details for cost basis tracking
 
 ### Recording Transactions
+Use the dedicated buttons for each transaction type:
+- **Buy More**: Add to existing holdings
+- **Sell**: Record sales
+- **Swap**: Exchange one coin for another
+- **Transfer**: Move between sources
+- **Send**: Send to external address
 
-All transactions are automatically logged when you:
-- Add a holding (Buy)
-- Sell a holding (Sell)
-- Swap between coins (Swap)
-- Add staking rewards (Staking Reward)
+### Managing Traditional Assets
+1. Navigate to **Investments** tab
+2. Click **+ Add Asset** in Traditional Assets section
+3. Enter property details (name, value, source)
+4. Link to liabilities if applicable (mortgages, etc.)
 
-View complete history in the **Transaction History** section.
+### Budget Tracking
+1. Go to **Budget** tab
+2. Add income sources with frequency
+3. Add expenses with frequency
+4. Optionally assign to specific assets (rental income, etc.)
+5. Use filters to view income only or expenses only
 
-### Backup Your Data
+### Viewing Price History
+Click the 📈 Chart icon next to any crypto holding to see:
+- 7 days / 30 days / 90 days / 1 year / Max timeframes
+- Current price, highest, lowest, average
+- Percentage change over period
+- Data points collected
 
-**Server Backup:**
-1. Click **"💾 Backup to Server"** (top right)
-2. Backups saved to `backups/` folder
-3. Kept for 30 days automatically
+## 🔄 Backup & Restore
 
-**Export JSON:**
-1. Click **"📥 Export Data"**
-2. Save the JSON file securely
-3. Import later with **"📤 Import Data"**
+### Automatic Backups
+- Run automatically every 24 hours
+- Stored in `backups/` directory on server
+- Filename format: `auto-backup-YYYY-MM-DDTHH-MM-SS.json`
 
-## 🏗️ Architecture
+### Manual Backups
+1. Click **⚙️ Settings**
+2. Click **💾 Export Portfolio Data**
+3. Save JSON file locally
 
-### Components
+### Restore from Backup
+1. Click **⚙️ Settings**
+2. Click **📂 Browse Backups** (server) or **📥 Import Portfolio Data** (local file)
+3. Select backup to restore
+4. Confirm restoration
 
-**Frontend (`tracker.html`)**
-- Single-page application
-- Pure HTML/CSS/JavaScript
-- Chart.js for visualizations
-- LocalStorage for data persistence
+## 🗂️ File Structure
 
-**Backend (`server_coingecko.py`)**
-- Python HTTP server
-- CoinGecko API integration
-- SQLite price history database
-- Automatic backup management
-
-### Data Storage
-
-**Browser (localStorage):**
-- Holdings
-- Transactions
-- Watchlist
-- Settings
-- Price cache
-
-**Server (files):**
-- `price_history.db` - Price snapshots (SQLite)
-- `tracked_coins.json` - Coin tracking list
-- `backups/` - Portfolio backups
-
-## 🔧 Configuration
-
-### Changing the Server Port
-
-Edit `server_coingecko.py`:
-```python
-PORT = 8080  # Change to your preferred port
+```
+rjtventures-crypto-tracker/
+├── tracker-v2.0-COMPLETE.html    # Main tracker application
+├── server_coingecko.py           # Backend server
+├── price_history.db              # SQLite price database (auto-created)
+├── backups/                      # Automatic backups (auto-created)
+└── README.md                     # This file
 ```
 
-### Price Update Interval
+## 🔐 Data Storage
 
-Default: 5 minutes. To change:
-```python
-UPDATE_INTERVAL = 300  # Seconds (5 minutes)
-```
+### LocalStorage (Browser)
+- Holdings, transactions, watchlist
+- Budget data, staking positions, liabilities
+- Custom prices, user preferences
+- Portfolio name, view modes
 
-### Backup Retention
+### SQLite Database (Server)
+- Price history (every 5 minutes)
+- Coin metadata
+- Used for 24h change calculations
 
-Default: 30 days. To change:
-```python
-KEEP_BACKUPS_DAYS = 30  # Days
-```
-
-## 🌐 Supported Cryptocurrencies
-
-### Currently Tracking (24 coins):
-- Bitcoin (BTC)
-- Ethereum (ETH)
-- Cardano (ADA)
-- Ripple (XRP)
-- Solana (SOL)
-- Dogecoin (DOGE)
-- Litecoin (LTC)
-- Tron (TRX)
-- Stellar (XLM)
-- EOS
-- Polygon (POL/MATIC)
-- Aave (AAVE)
-- Chainlink (LINK)
-- The Graph (GRT)
-- Hedera (HBAR)
-- Fetch.ai (FET)
-- And more...
-
-### Adding More Coins
-
-The tracker automatically supports **10,000+ coins** from CoinGecko!
-
-**To add a coin to tracking:**
-1. Add it to your watchlist OR
-2. Add it as a holding
-
-The server will automatically start tracking prices.
-
-## 🔐 Privacy & Security
-
-### Your Data is Private
-
-✅ **All data stays on YOUR computer**
-- Holdings stored in browser
-- Price database stored locally
-- Backups stored on your machine
-- No data sent to external servers (except CoinGecko for prices)
-
-### No Account Required
-
-- No registration
-- No login
-- No email
-- No tracking
-- 100% self-hosted
-
-### Backup Recommendations
-
-1. **Regular Exports:** Export JSON weekly
-2. **Server Backups:** Automatic (kept 30 days)
-3. **Database Backup:** Copy `price_history.db` periodically
-4. **Source Control:** Keep `tracked_coins.json` backed up
+### Server Backups
+- Complete portfolio snapshots
+- Includes all holdings, transactions, budget data
+- JSON format for easy import/export
 
 ## 🛠️ Troubleshooting
 
 ### Server Won't Start
+- Check if port 2816 is already in use
+- Verify Python 3.8+ is installed: `python3 --version`
+- Install required packages
 
-**Error:** `Port 8080 already in use`
-```bash
-# Find what's using the port
-lsof -i :8080
-# Kill it or change PORT in server_coingecko.py
-```
+### 429 Rate Limit Errors
+- CoinGecko free API has rate limits (10-30 calls/minute)
+- Increase `UPDATE_INTERVAL` in server to 900+ seconds (15+ minutes)
+- Reduce number of tracked coins
 
-### Prices Not Loading
+### Prices Showing $0.00
+- Ensure server is running
+- Check browser console for errors
+- Hard refresh page (Ctrl+Shift+R)
+- Clear browser cache
 
-1. Check server is running
-2. Hard refresh browser (Shift + Command + R)
-3. Check server terminal for errors
-4. Verify internet connection
+### 24h Change Shows 0.00%
+- Requires 24+ hours of price history data
+- Server must run continuously to collect data
+- Check `price_history.db` has data: `sqlite3 price_history.db "SELECT COUNT(*) FROM price_history;"`
 
-### Watchlist Shows "Loading..."
+## 🔮 Future Enhancements
 
-1. Verify server is running
-2. Wait for next price update (every 5 min)
-3. Check coin ID is correct in `tracked_coins.json`
-4. Restart server: `Ctrl+C` then `python3 server_coingecko.py`
+- [ ] Multi-currency support (USD, EUR, etc.)
+- [ ] Tax reporting exports
+- [ ] Mobile app (iOS/Android)
+- [ ] Price alerts/notifications
+- [ ] DCA (Dollar Cost Averaging) calculator
+- [ ] API key support for exchanges
+- [ ] Multi-user support
+- [ ] Cloud sync option
 
-### Missing Price History
+## 📝 License
 
-Price history builds over time:
-- **Minimum:** 2-3 days for meaningful charts
-- **Optimal:** 7+ days
-- **Note:** History only starts when coin is added
-
-## 📊 API Information
-
-### CoinGecko API
-
-**Free Tier Limits:**
-- 50 calls/minute
-- No API key required
-- 10,000+ coins supported
-
-**This tracker uses:**
-- ~1 call every 5 minutes
-- Well within free limits
-- No rate limiting issues
+MIT License - See LICENSE file for details
 
 ## 🤝 Contributing
 
-Contributions welcome! Here's how:
-
+Contributions welcome! Please:
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-### Development Setup
+## ⚠️ Disclaimer
 
-```bash
-# Clone your fork
-git clone https://github.com/yourusername/rjtventures-crypto-tracker.git
-cd rjtventures-crypto-tracker
+This software is for personal portfolio tracking only. It is not financial advice. Cryptocurrency investments are volatile and risky. Always do your own research and never invest more than you can afford to lose.
 
-# Make changes
-# Test thoroughly
-# Submit PR
-```
+## 📧 Support
 
-## 📝 Changelog
-
-### [1.3.0] - 2026-04-22
-#### Fixed
-- Polygon coin ID updated to `polygon-ecosystem-token`
-- Watchlist price loading issues resolved
-- Backup browse endpoint added
-- All 404 errors fixed
-
-### [1.2.0] - 2026-04-22
-#### Fixed
-- Watchlist prices now update correctly
-- Fixed price fetching to include watchlist coins
-
-### [1.1.0] - 2026-04-22
-#### Fixed
-- Removed loading message from watchlist modal
-- Cache busting meta tags added
-
-### [1.0.0] - 2026-04-20
-#### Added
-- Initial release
-- Banker green theme
-- Watchlist feature
-- Complete portfolio tracking
-- Price history charts
-- Server backups
-
-## 📜 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 💬 Support
-
-Having issues? Check:
-1. [Troubleshooting Guide](#-troubleshooting)
-2. [Installation Guide](#-quick-start)
-3. Open an issue on GitHub
-
-## 🎯 Roadmap
-
-### Planned Features (v2.0)
-- [ ] Tabbed interface for cleaner UX
-- [ ] Price alerts
-- [ ] Portfolio comparison
-- [ ] Multi-currency support (USD, EUR, etc.)
-- [ ] Mobile app version
-- [ ] Docker containerization
-
-### Under Consideration
-- [ ] Tax reporting
-- [ ] DeFi protocol integration
-- [ ] NFT tracking
-- [ ] Hardware wallet direct integration
+For issues, questions, or feature requests:
+- Open an issue on GitHub
+- Email: [your-email@example.com]
 
 ## 🙏 Acknowledgments
 
-- **CoinGecko** - For the free crypto API
-- **Chart.js** - For beautiful charts
-- **Open Source Community** - For inspiration and tools
+- Price data provided by [CoinGecko](https://www.coingecko.com/)
+- Chart visualization using [Chart.js](https://www.chartjs.org/)
+- Built in Perth, Western Australia 🇦🇺
 
 ---
 
-**Made with 💚 by RJTVentures**
-
-*Self-hosted. Private. Powerful.*
+**Made with ❤️ by Rob | RJTVentures**
