@@ -1,178 +1,166 @@
+[CONTRIBUTING.md](https://github.com/user-attachments/files/27228780/CONTRIBUTING.md)
 # Contributing to RJTVentures Crypto Tracker
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to the project.
+Thank you for considering contributing to this project! Here's how you can help.
 
-## 🤝 How to Contribute
+## Code of Conduct
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Focus on what is best for the community
+
+## How to Contribute
 
 ### Reporting Bugs
 
-Before creating a bug report:
-1. Check existing issues to avoid duplicates
-2. Collect information about the bug:
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Screenshots if applicable
-   - Browser/OS version
-   - Server logs if relevant
+Before creating bug reports, please check existing issues to avoid duplicates.
 
-Create an issue with:
+**When reporting a bug, include:**
 - Clear, descriptive title
-- Detailed description
 - Steps to reproduce
-- Any relevant logs or screenshots
+- Expected vs actual behavior
+- Screenshots if applicable
+- Browser/OS version
+- Python version (for server issues)
 
 ### Suggesting Features
 
-Feature requests are welcome! Please:
-- Check if the feature has already been suggested
-- Clearly describe the feature and its benefits
-- Explain your use case
-- Consider if it fits the project's scope
+Feature suggestions are welcome! Please:
+- Use a clear, descriptive title
+- Provide detailed description of proposed feature
+- Explain why this would be useful
+- Include mockups/examples if possible
 
 ### Pull Requests
 
 1. **Fork the repository**
+   ```bash
+   git clone https://github.com/yourusername/rjtventures-crypto-tracker.git
+   cd rjtventures-crypto-tracker
+   ```
+
 2. **Create a feature branch**
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
 3. **Make your changes**
-   - Write clear, commented code
    - Follow existing code style
+   - Add comments for complex logic
    - Test thoroughly
 
 4. **Commit your changes**
    ```bash
-   git commit -m 'Add amazing feature'
+   git commit -m "Add amazing feature"
    ```
 
-5. **Push to your fork**
+5. **Push to your branch**
    ```bash
    git push origin feature/amazing-feature
    ```
 
 6. **Open a Pull Request**
-   - Describe what you changed and why
-   - Reference any related issues
+   - Provide clear description of changes
+   - Link related issues
    - Include screenshots for UI changes
 
-## 💻 Development Setup
+## Code Style Guidelines
+
+### HTML/JavaScript
+- Use 4-space indentation
+- Add section comments for major function groups
+- Use descriptive variable/function names
+- Keep functions focused and single-purpose
+
+### Python (Server)
+- Follow PEP 8 style guide
+- Use descriptive variable names
+- Add docstrings to functions
+- Handle errors gracefully
+
+### Comments
+```javascript
+// Good: Explains WHY
+// Calculate 24h change from database instead of API to avoid rate limits
+const change24h = calculateFromDb(coinId);
+
+// Bad: Explains WHAT (obvious from code)
+// Set change to result of calculation
+const change24h = calculateFromDb(coinId);
+```
+
+## Development Setup
 
 ### Prerequisites
 - Python 3.8+
-- Git
 - Modern web browser
+- Text editor / IDE
 
-### Local Setup
+### Local Development
+1. Start the server: `python3 server_coingecko.py`
+2. Open `tracker-v2.0-COMPLETE.html` in browser
+3. Make changes and test
+4. Use browser DevTools for debugging
 
-```bash
-# Clone your fork
-git clone https://github.com/yourusername/rjtventures-crypto-tracker.git
-cd rjtventures-crypto-tracker
+### Testing Checklist
+- [ ] Test on Chrome/Firefox/Safari
+- [ ] Test all CRUD operations (Create, Read, Update, Delete)
+- [ ] Verify data persists in localStorage
+- [ ] Check server endpoints respond correctly
+- [ ] Test edge cases (empty data, large numbers, etc.)
+- [ ] Verify responsive design on mobile
 
-# Run installation
-./install.sh
+## Project Structure
 
-# Start the server
-python3 server_coingecko.py
+```
+tracker-v2.0-COMPLETE.html
+├── Global State Variables (line ~2290)
+├── Coin Metadata & Mappings (line ~2340)
+├── Category Functions (line ~2466)
+├── Watchlist Management (line ~2518)
+├── Traditional Assets (line ~2690)
+├── API & Price Fetching (line ~3408)
+├── Holdings Rendering (line ~3683)
+├── Modal Management (line ~5247)
+├── Staking Positions (line ~5684)
+├── Liabilities Management (line ~5931)
+├── Transaction History (line ~6161)
+├── Budget System (line ~7193)
+└── Initialization (line ~7556)
 ```
 
-### Testing
-
-Before submitting:
-1. Test all existing features still work
-2. Test your new feature thoroughly
-3. Test on multiple browsers if UI changes
-4. Check server logs for errors
-
-## 📝 Code Style
-
-### Python (server_coingecko.py)
-- Follow PEP 8 guidelines
-- Use descriptive variable names
-- Add comments for complex logic
-- Keep functions focused and small
-
-### JavaScript (tracker.html)
-- Use meaningful variable names
-- Add comments for complex functions
-- Maintain consistent indentation (4 spaces)
-- Use ES6+ features where appropriate
-
-### CSS
-- Follow existing naming conventions
-- Keep selectors specific
-- Group related styles
-- Comment complex layouts
-
-## 🎯 Areas for Contribution
+## What We're Looking For
 
 ### High Priority
-- [ ] Bug fixes
-- [ ] Documentation improvements
-- [ ] Performance optimizations
-- [ ] Browser compatibility fixes
+- Bug fixes
+- Performance improvements
+- Security enhancements
+- Documentation improvements
 
 ### Medium Priority
-- [ ] New cryptocurrency support
-- [ ] Additional chart types
-- [ ] Export format options
-- [ ] UI/UX improvements
+- New features (discuss first in issues)
+- UI/UX improvements
+- Code refactoring
+- Test coverage
 
 ### Nice to Have
-- [ ] Dark mode theme
-- [ ] Mobile app version
-- [ ] Docker support
-- [ ] Additional languages
+- Additional chart types
+- Export formats (PDF, Excel)
+- Multi-language support
+- Dark mode
 
-## 🐛 Debugging
+## Questions?
 
-### Server Issues
-```bash
-# Check server logs
-python3 server_coingecko.py
+Feel free to:
+- Open an issue for discussion
+- Ask in pull request comments
+- Email: [your-email@example.com]
 
-# Verify port availability
-lsof -i :8080
-```
+## Recognition
 
-### Frontend Issues
-- Open browser console (F12)
-- Check for JavaScript errors
-- Verify localStorage data
-- Test with cache cleared
+Contributors will be:
+- Listed in CONTRIBUTORS.md
+- Mentioned in release notes
+- Credited in commit history
 
-### Database Issues
-```bash
-# Check database
-sqlite3 price_history.db ".schema"
-sqlite3 price_history.db "SELECT COUNT(*) FROM price_history;"
-```
-
-## 📋 Checklist for PR
-
-Before submitting your PR, ensure:
-
-- [ ] Code follows project style guidelines
-- [ ] All existing tests pass
-- [ ] New tests added for new features
-- [ ] Documentation updated if needed
-- [ ] CHANGELOG.md updated
-- [ ] No console errors or warnings
-- [ ] Tested on multiple browsers
-- [ ] Commit messages are clear
-
-## ❓ Questions?
-
-- Check the README.md
-- Search existing issues
-- Open a new issue for discussion
-
-## 📜 License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
----
-
-Thank you for contributing to RJTVentures Crypto Tracker! 🙏
+Thank you for contributing! 🚀
