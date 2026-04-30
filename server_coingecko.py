@@ -180,6 +180,68 @@ def get_price_history_from_db(coin_id, days=30):
         results = c.fetchall()
         conn.close()
         
+        return [{'timestamp': r[0], 'price': r[1]} for r in results]
+    except Exception as e:
+        print(f"Error getting price history: {e}")
+        return []
+
+def calculate_24h_change_from_db(coin_id):
+    """Calculate 24h price change from database history"""
+    try:
+        conn = sqlite3.connect(PRICE_DB)
+        c = conn.cursor()
+        
+        # Get current price (most recent)
+        c.execute(
+            'SELECT price FROM price_history WHERE coin_id = ? ORDER BY timestamp DESC LIMIT 1',
+            (coin_id,)
+        )
+        current_result = c.fetchone()
+        
+        # Get price from 24 hours ago
+        twenty_four_hours_ago = (datetime.now() - timedelta(hours=24)).isoformat()
+        c.execute(
+            'SELECT price FROM price_history WHERE coin_id = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1',
+            (coin_id, twenty_four_hours_ago)
+        )
+        old_result = c.fetchone()
+        
+        conn.close()
+        
+        if current_result and old_result:
+            current_price = current_result[0]
+            old_price = old_result[0]
+            
+            if old_price > 0:
+                change_percent = ((current_price - old_price) / old_price) * 100
+                print(f"[DEBUG] {coin_id}: current=${current_price:.2f}, 24h_ago=${old_price:.2f}, change={change_percent:.2f}%")
+                return change_percent
+            else:
+                print(f"[DEBUG] {coin_id}: old_price is 0")
+        else:
+            print(f"[DEBUG] {coin_id}: Missing data - current={current_result}, old={old_result}")
+        
+        return 0
+    except Exception as e:
+        print(f"[ERROR] Error calculating 24h change for {coin_id}: {e}")
+        return 0
+
+def get_price_history_from_db_old(coin_id, days=30):
+    """Retrieve price history from database"""
+    try:
+        conn = sqlite3.connect(PRICE_DB)
+        c = conn.cursor()
+        
+        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+        
+        c.execute(
+            'SELECT timestamp, price FROM price_history WHERE coin_id = ? AND timestamp >= ? ORDER BY timestamp ASC',
+            (coin_id, cutoff_date)
+        )
+        
+        results = c.fetchall()
+        conn.close()
+        
         return [{'timestamp': row[0], 'price': row[1]} for row in results]
     except Exception as e:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️ Error fetching price history: {e}")
@@ -212,18 +274,27 @@ def cleanup_old_backups():
     except Exception as e:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️ Error cleaning backups: {e}")
 
-def fetch_coingecko_prices():
-    """Fetch latest prices from CoinGecko API"""
+def fetch_coingecko_prices(coins_list=None):
+    """Fetch latest prices from CoinGecko API
+    
+    Args:
+        coins_list: Optional list of specific coins to fetch. If None, uses COINS_TO_FETCH
+    """
     global price_cache, last_update, COINS_TO_FETCH
     
     try:
-        # Reload coins list in case it was updated
-        COINS_TO_FETCH = load_coins_to_fetch()
+        # Use provided list or reload from file
+        if coins_list is None:
+            COINS_TO_FETCH = load_coins_to_fetch()
+            coins_to_request = COINS_TO_FETCH
+        else:
+            # Use the provided list (from tracker POST request)
+            coins_to_request = coins_list
         
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Fetching prices from CoinGecko...")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Fetching prices for {len(coins_to_request)} coins from CoinGecko...")
         
         # Build API URL
-        ids = ','.join(COINS_TO_FETCH)
+        ids = ','.join(coins_to_request)
         url = f"{COINGECKO_API}?ids={ids}&vs_currencies=aud&include_24hr_change=true"
         
         req = urllib.request.Request(url)
@@ -232,147 +303,156 @@ def fetch_coingecko_prices():
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode())
             
-            # Convert CoinGecko format with 24h change
-            new_cache = {}
+            # Update cache with new prices
             for coin_id, coin_data in data.items():
-                new_cache[coin_id] = {
-                    'aud': coin_data.get('aud', 0),
-                    'aud_24h_change': coin_data.get('aud_24h_change', 0)
-                }
+                if 'aud' in coin_data:
+                    price_cache[coin_id] = {
+                        'aud': coin_data['aud'],
+                        'aud_24h_change': coin_data.get('aud_24h_change', 0)
+                    }
             
-            price_cache = new_cache
-            last_update = datetime.now().isoformat()
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Successfully fetched {len(price_cache)} coin prices")
+            last_update = datetime.now()
+            
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Updated {len(data)} prices")
             
             # Save prices to database
             save_all_prices_to_database()
             
             return True
-                
+            
     except urllib.error.URLError as e:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Network error: {e}")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Network error: {e}")
         return False
     except Exception as e:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Error fetching prices: {e}")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Error fetching prices: {e}")
         return False
 
 def price_updater():
-    """Background thread to update prices every 5 minutes"""
+    """Background thread to update prices every UPDATE_INTERVAL seconds"""
     while True:
-        fetch_coingecko_prices()
         time.sleep(UPDATE_INTERVAL)
+        fetch_coingecko_prices()
 
 def daily_cleanup():
-    """Background thread for daily cleanup tasks"""
+    """Background thread to clean up old data once per day"""
     while True:
         time.sleep(86400)  # 24 hours
-        cleanup_old_price_data(365)
         cleanup_old_backups()
+        cleanup_old_price_data()
 
 def get_local_ip():
     """Get the local IP address"""
     import socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
+        s.connect(('8.8.8.8', 80))
         ip = s.getsockname()[0]
         s.close()
         return ip
     except:
-        return "localhost"
+        return 'localhost'
 
 class CryptoTrackerHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        """Simplified logging"""
-        print(f"[{self.log_date_time_string()}] {format % args}")
+        """Override to customize logging"""
+        timestamp = datetime.now().strftime('[%d/%b/%Y %H:%M:%S]')
+        print(f"{timestamp} {format % args}")
     
     def do_GET(self):
-        # API endpoint to get current prices
+        # API endpoint to get prices
         if self.path == '/api/prices':
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] 📊 /api/prices requested - calculating 24h changes from DB...")
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            # Return prices in the format tracker expects
-            formatted_prices = {}
+            # Enhance price_cache with calculated 24h changes from database
+            enhanced_prices = {}
             for coin_id, price_data in price_cache.items():
-                if isinstance(price_data, dict):
-                    formatted_prices[coin_id] = price_data
-                else:
-                    # Legacy format compatibility
-                    formatted_prices[coin_id] = {
-                        'aud': price_data,
-                        'aud_24h_change': 0
-                    }
+                # Calculate 24h change from database
+                change_24h = calculate_24h_change_from_db(coin_id)
+                
+                enhanced_prices[coin_id] = {
+                    'aud': price_data['aud'],
+                    'aud_24h_change': change_24h  # Use calculated value from DB
+                }
+            
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Enhanced {len(enhanced_prices)} prices with 24h changes")
             
             response = {
                 'status': 'ok',
-                'prices': formatted_prices,
-                'last_update': last_update
+                'prices': enhanced_prices,
+                'last_update': last_update.isoformat() if last_update else None,
+                'coins_tracked': len(enhanced_prices)
             }
             
             self.wfile.write(json.dumps(response).encode())
             return
         
-        # API endpoint to get price history from database
+        # API endpoint to get price history for a specific coin
         elif self.path.startswith('/api/price-history/'):
             coin_id = self.path.split('/api/price-history/')[-1].split('?')[0]
             
             # Parse query parameters
-            query_params = {}
-            if '?' in self.path:
-                query_string = self.path.split('?')[1]
-                for param in query_string.split('&'):
-                    if '=' in param:
-                        key, value = param.split('=')
-                        query_params[key] = value
-            
-            days = int(query_params.get('days', '30'))
+            import urllib.parse
+            query_params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            days = int(query_params.get('days', [30])[0])
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            try:
-                price_history = get_price_history_from_db(coin_id, days)
+            history = get_price_history_from_db(coin_id, days)
+            
+            # Calculate statistics from history
+            stats = {}
+            if history and len(history) > 0:
+                prices = [h['price'] for h in history]
+                current_price = prices[-1]
+                first_price = prices[0]
                 
-                # Calculate statistics
-                stats = {}
-                if len(price_history) > 0:
-                    prices = [p['price'] for p in price_history]
-                    current_price = prices[-1]
-                    first_price = prices[0]
-                    
-                    stats = {
-                        'current': current_price,
-                        'highest': max(prices),
-                        'lowest': min(prices),
-                        'average': sum(prices) / len(prices),
-                        'change': ((current_price - first_price) / first_price * 100) if first_price > 0 else 0,
-                        'data_points': len(prices)
-                    }
-                
-                response = {
-                    'status': 'ok',
-                    'coin_id': coin_id,
-                    'days': days,
-                    'history': price_history,
-                    'stats': stats
+                stats = {
+                    'current': current_price,
+                    'highest': max(prices),
+                    'lowest': min(prices),
+                    'average': sum(prices) / len(prices),
+                    'change': ((current_price - first_price) / first_price * 100) if first_price > 0 else 0,
+                    'data_points': len(prices)
                 }
             
-            except Exception as e:
-                response = {
-                    'status': 'error',
-                    'message': str(e)
-                }
+            response = {
+                'status': 'ok',
+                'coin_id': coin_id,
+                'history': history,
+                'stats': stats
+            }
             
             self.wfile.write(json.dumps(response).encode())
             return
         
-        # API endpoint to list backups
-        elif self.path == '/api/backups/list':
+        # API endpoint to get status
+        elif self.path == '/api/status':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {
+                'status': 'ok',
+                'server': 'Crypto Tracker - CoinGecko Edition',
+                'version': '2.0',
+                'coins_tracked': len(price_cache),
+                'last_update': last_update.isoformat() if last_update else None,
+                'update_interval_seconds': UPDATE_INTERVAL
+            }
+            
+            self.wfile.write(json.dumps(response).encode())
+            return
+        
+        # API endpoint to list all backups
+        elif self.path == '/api/backup/list':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -382,17 +462,15 @@ class CryptoTrackerHandler(BaseHTTPRequestHandler):
                 ensure_backup_directory()
                 backups = []
                 
-                if os.path.exists(BACKUP_DIR):
-                    for filename in sorted(os.listdir(BACKUP_DIR), reverse=True):
-                        if filename.endswith('.json'):
-                            filepath = os.path.join(BACKUP_DIR, filename)
-                            file_stat = os.stat(filepath)
-                            
-                            backups.append({
-                                'filename': filename,
-                                'size': file_stat.st_size,
-                                'date': datetime.fromtimestamp(file_stat.st_mtime).isoformat()
-                            })
+                for filename in os.listdir(BACKUP_DIR):
+                    if filename.endswith('.json'):
+                        filepath = os.path.join(BACKUP_DIR, filename)
+                        file_stat = os.stat(filepath)
+                        backups.append({
+                            'filename': filename,
+                            'size': file_stat.st_size,
+                            'date': datetime.fromtimestamp(file_stat.st_mtime).isoformat()
+                        })
                 
                 response = {
                     'status': 'ok',
@@ -446,6 +524,41 @@ class CryptoTrackerHandler(BaseHTTPRequestHandler):
         self.send_error(404)
     
     def do_POST(self):
+        # NEW: API endpoint to get prices for specific coins (from tracker)
+        if self.path == '/api/prices':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                data = json.loads(post_data.decode())
+                coins_requested = data.get('coins', [])
+                
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 📥 Received request for {len(coins_requested)} coins from tracker")
+                
+                # Fetch prices for the requested coins
+                fetch_coingecko_prices(coins_requested)
+                
+                # Return the prices
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                response = {
+                    'status': 'ok',
+                    'prices': price_cache,
+                    'last_update': last_update.isoformat() if last_update else None,
+                    'coins_tracked': len(price_cache)
+                }
+                
+                self.wfile.write(json.dumps(response).encode())
+                
+            except Exception as e:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️ Error processing price request: {e}")
+                self.send_error(500, f'Failed to fetch prices: {str(e)}')
+            
+            return
+        
         # API endpoint to add a coin to tracking list
         if self.path == '/api/coins/add':
             content_length = int(self.headers['Content-Length'])
@@ -519,6 +632,7 @@ class CryptoTrackerHandler(BaseHTTPRequestHandler):
                 response = {
                     'status': 'ok',
                     'filename': filename,
+                    'size': len(post_data),
                     'message': 'Backup saved successfully'
                 }
                 self.wfile.write(json.dumps(response).encode())
@@ -542,13 +656,14 @@ def main():
     """Main function to start the server"""
     
     print("=" * 70)
-    print("  CRYPTO TRACKER SERVER - CoinGecko Edition")
+    print("  CRYPTO TRACKER SERVER - CoinGecko Edition v2.0")
     print("  with Auto-Backup & Price History Database")
     print("=" * 70)
     print()
     print("🔄 SWITCHED FROM COINSPOT TO COINGECKO")
     print("   • 10,000+ coins available (vs CoinSpot's 16)")
     print("   • All your coins now supported!")
+    print("   • NEW: Accepts coin lists from tracker (including watchlist!)")
     print()
     
     ensure_backup_directory()
