@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>RJTVentures Crypto Tracker v2.0</title>
+    <title>RJTVentures Crypto Tracker v2.1</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -1255,7 +1255,7 @@
     <div class="header">
         <div>
             <h1 id="portfolioNameDisplay">💰 RJTVentures</h1>
-            <p>Complete Finance Tracker <span style="opacity: 0.6; font-size: 0.85em;">(v2.0 - Tabbed)</span></p>
+            <p>Complete Finance Tracker <span style="opacity: 0.6; font-size: 0.85em;">(v2.1 - DCA + Tax + Mobile)</span></p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <button onclick="refreshPrices()" style="padding: 10px 20px; background: #d4af37; border: none; border-radius: 6px; color: #0a4d3c; cursor: pointer; font-size: 0.95em; font-weight: 600;">🔄 Refresh Prices</button>
@@ -1374,26 +1374,68 @@
             <!-- Add Holding Form -->
             <div class="card">
                 <h3>Add New Holding</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0;">
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 600;">Asset Name *</label>
-                        <input type="text" id="coin" placeholder="bitcoin, ethereum, etc." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 600;">Amount *</label>
-                        <input type="number" id="amount" step="0.00000001" placeholder="0.00" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 600;">Source *</label>
-                        <select id="source" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
-                            <option value="Hardware Wallet">Hardware Wallet</option>
-                            <option value="CoinSpot">CoinSpot</option>
-                            <option value="Other Exchange">Other Exchange</option>
-                            <option value="Traditional Asset">Traditional Asset</option>
-                        </select>
+                
+                <!-- Toggle between Crypto and Custom -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="cryptoToggle" class="toggle-btn active" onclick="switchToMode('crypto')" style="flex: 1; padding: 10px; border: 2px solid #3b82f6; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        💰 Cryptocurrency
+                    </button>
+                    <button id="customToggle" class="toggle-btn" onclick="switchToMode('custom')" style="flex: 1; padding: 10px; border: 2px solid #e5e7eb; background: white; color: #6b7280; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ⚙️ Custom Asset
+                    </button>
+                </div>
+                
+                <!-- Crypto Mode Fields -->
+                <div id="cryptoFields" style="display: block;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0;">
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Cryptocurrency *</label>
+                            <input type="text" id="coinId" placeholder="bitcoin, ethereum, btc, eth" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Amount *</label>
+                            <input type="number" id="amount" step="0.00000001" placeholder="0.00" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Source *</label>
+                            <select id="source" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                                <option value="hardware">Hardware Wallet</option>
+                                <option value="coinspot">CoinSpot</option>
+                                <option value="other">Other Exchange</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <button onclick="addHolding()" style="padding: 12px 24px;">Add to Portfolio</button>
+                
+                <!-- Custom Mode Fields -->
+                <div id="customFields" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin: 16px 0;">
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Asset Name *</label>
+                            <input type="text" id="customName" placeholder="Gold, Silver, etc." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Price (AUD) *</label>
+                            <input type="number" id="customPrice" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Amount *</label>
+                            <input type="number" id="customAmount" step="0.00000001" placeholder="0.00" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Source *</label>
+                            <select id="customSource" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                                <option value="hardware">Hardware Wallet</option>
+                                <option value="coinspot">CoinSpot</option>
+                                <option value="other">Other Exchange</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="addHolding()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    ➕ Add to Portfolio
+                </button>
             </div>
 
             <!-- Holdings Table -->
@@ -1881,7 +1923,7 @@
             <!-- About -->
             <div class="card">
                 <h3>About</h3>
-                <p style="margin-bottom: 10px;"><strong>RJTVentures Crypto Tracker v2.0</strong></p>
+                <p style="margin-bottom: 10px;"><strong>RJTVentures Crypto Tracker v2.1</strong></p>
                 <p style="color: #666;">Self-hosted cryptocurrency portfolio tracker with budget management</p>
             </div>
         </div>
@@ -2535,6 +2577,31 @@
         </div>
     </div>
 
+    <!-- Add to Watchlist Modal -->
+    <div id="addToWatchlistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👁️ Add to Watchlist</h3>
+                <span class="close" onclick="closeModal('addToWatchlistModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Coin Name or Symbol *</label>
+                    <input type="text" id="watchlistCoinId" placeholder="e.g., bitcoin, BTC, PEPE, Arbitrum" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px;">
+                    <small style="color: #6b7280; display: block; margin-top: 4px;">Enter any coin name or symbol - we'll search CoinGecko for you!</small>
+                </div>
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea id="watchlistNotes" placeholder="Why are you watching this coin?" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; resize: vertical;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('addToWatchlistModal')">Cancel</button>
+                <button class="btn-confirm" onclick="confirmAddToWatchlist()">Add to Watchlist</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Portfolio Name Modal -->
     <div id="editPortfolioNameModal" class="modal">
         <div class="modal-content">
@@ -2630,7 +2697,7 @@
 
     <script>
         /* ============================================================================
-           RJTVENTURES CRYPTO TRACKER v2.0
+           RJTVENTURES CRYPTO TRACKER v2.1
            
            A comprehensive cryptocurrency portfolio tracker with support for:
            - Multi-source crypto holdings (hardware wallet, exchanges, etc.)
@@ -2867,7 +2934,7 @@
         // Search for coin by symbol/name - now using CoinSpot's available coins
         async function searchCoinBySymbol(symbol) {
             try {
-                // First, check our local mapping
+                // First, check our local mapping for common coins (faster)
                 const symbolLower = symbol.toLowerCase();
                 
                 // CoinSpot available coins mapping (symbol -> coinId for our system)
@@ -2931,7 +2998,7 @@
                     'uniswap': { id: 'uniswap', name: 'Uniswap', symbol: 'UNI' }
                 };
                 
-                // Find coin by symbol or name
+                // Check local mapping first
                 const coin = coinspotCoins[symbolLower];
                 
                 if (coin) {
@@ -2940,8 +3007,33 @@
                     return coin.id;
                 }
                 
-                // If not found, return null (will use custom asset instead)
+                // If not in local mapping, search CoinGecko API
+                console.log(`🔍 Searching CoinGecko for: ${symbol}`);
+                
+                const response = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`);
+                
+                if (!response.ok) {
+                    console.error('CoinGecko search failed:', response.status);
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                if (data.coins && data.coins.length > 0) {
+                    // Return the first match (most relevant)
+                    const foundCoin = data.coins[0];
+                    console.log(`✅ Found: ${foundCoin.name} (${foundCoin.symbol.toUpperCase()}) - ID: ${foundCoin.id}`);
+                    
+                    // Store the symbol mapping
+                    coinSymbols[foundCoin.id] = foundCoin.symbol.toUpperCase();
+                    
+                    return foundCoin.id;
+                }
+                
+                // If not found anywhere
+                console.log(`❌ No results found for: ${symbol}`);
                 return null;
+                
             } catch (error) {
                 console.error('Error searching for coin:', error);
                 return null;
@@ -3126,6 +3218,29 @@
         }
 
         // Confirm Update Traditional Price
+        // Prepare to update traditional asset price
+        function prepareTraditionalPriceUpdate(assetId) {
+            const asset = holdings.find(h => h.id === assetId);
+            if (!asset) {
+                alert('Asset not found');
+                return;
+            }
+
+            // Set current transaction
+            currentTransaction = {
+                type: 'updateTraditionalPrice',
+                assetId: assetId
+            };
+
+            // Populate modal fields
+            document.getElementById('updateTraditionalName').value = asset.displayName || asset.coinId;
+            
+            // Get current price from customPrices or priceCache
+            const currentPrice = customPrices[asset.coinId]?.aud || priceCache[asset.coinId]?.aud || 0;
+            document.getElementById('updateTraditionalPrice').value = currentPrice;
+            document.getElementById('updateTraditionalAmount').value = asset.amount || 1;
+        }
+
         function confirmUpdateTraditionalPrice() {
             if (!currentTransaction || currentTransaction.type !== 'updateTraditionalPrice') return;
 
@@ -3342,6 +3457,44 @@
             }
         }
 
+        // Switch between Crypto and Custom mode for Add Holding
+        function switchToMode(mode) {
+            const cryptoToggle = document.getElementById('cryptoToggle');
+            const customToggle = document.getElementById('customToggle');
+            const cryptoFields = document.getElementById('cryptoFields');
+            const customFields = document.getElementById('customFields');
+            
+            if (mode === 'crypto') {
+                // Activate crypto mode
+                cryptoToggle.classList.add('active');
+                cryptoToggle.style.background = '#3b82f6';
+                cryptoToggle.style.color = 'white';
+                cryptoToggle.style.borderColor = '#3b82f6';
+                
+                customToggle.classList.remove('active');
+                customToggle.style.background = 'white';
+                customToggle.style.color = '#6b7280';
+                customToggle.style.borderColor = '#e5e7eb';
+                
+                cryptoFields.style.display = 'block';
+                customFields.style.display = 'none';
+            } else {
+                // Activate custom mode
+                customToggle.classList.add('active');
+                customToggle.style.background = '#3b82f6';
+                customToggle.style.color = 'white';
+                customToggle.style.borderColor = '#3b82f6';
+                
+                cryptoToggle.classList.remove('active');
+                cryptoToggle.style.background = 'white';
+                cryptoToggle.style.color = '#6b7280';
+                cryptoToggle.style.borderColor = '#e5e7eb';
+                
+                cryptoFields.style.display = 'none';
+                customFields.style.display = 'block';
+            }
+        }
+        
         async function addHolding() {
             const isCustomMode = document.getElementById('customToggle').classList.contains('active');
             
@@ -3349,8 +3502,8 @@
                 // Add custom asset
                 const customName = document.getElementById('customName').value.trim();
                 const customPrice = parseFloat(document.getElementById('customPrice').value);
-                const amount = parseFloat(document.getElementById('amount').value);
-                const source = document.getElementById('source').value;
+                const amount = parseFloat(document.getElementById('customAmount').value);
+                const source = document.getElementById('customSource').value;
 
                 if (!customName || !customPrice || !amount || customPrice <= 0 || amount <= 0) {
                     alert('Please enter a valid custom asset name, price, and amount');
@@ -3384,7 +3537,7 @@
                 // Clear form
                 document.getElementById('customName').value = '';
                 document.getElementById('customPrice').value = '';
-                document.getElementById('amount').value = '';
+                document.getElementById('customAmount').value = '';
                 
             } else {
                 // Add regular crypto asset
@@ -3472,23 +3625,17 @@
 
         // Open Add to Watchlist Modal
         function openAddToWatchlistModal() {
-            const coinInput = prompt('Enter coin ID (e.g., bitcoin, ethereum):');
-            if (!coinInput) return;
+            // Clear previous values
+            document.getElementById('watchlistCoinId').value = '';
+            document.getElementById('watchlistNotes').value = '';
             
-            const coinId = coinInput.toLowerCase().trim();
-            const notes = prompt('Add notes (optional):') || '';
+            // Open modal
+            openModal('addToWatchlistModal');
             
-            // Add to watchlist
-            watchlist.push({
-                id: Date.now(),
-                coinId: coinId,
-                notes: notes,
-                addedDate: new Date().toISOString()
-            });
-            
-            localStorage.setItem('watchlist', JSON.stringify(watchlist));
-            renderWatchlist();
-            alert('Added to watchlist!');
+            // Focus on coin input
+            setTimeout(() => {
+                document.getElementById('watchlistCoinId').focus();
+            }, 100);
         }
 
         // Confirm Add to Watchlist
@@ -3501,6 +3648,12 @@
                 return;
             }
 
+            // Show searching indicator
+            const submitBtn = document.querySelector('#addToWatchlistModal .btn-confirm');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔍 Searching...';
+            submitBtn.disabled = true;
+
             // Check if input looks like a symbol or try to search anyway
             let coinId = coinInput.toLowerCase();
             
@@ -3511,6 +3664,8 @@
                 coinId = searchedCoinId;
             } else if (!/^[a-z0-9-]+$/i.test(coinInput)) {
                 // If search failed and input has special characters, reject it
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
                 alert(`Couldn't find "${coinInput}". Please use the coin symbol (e.g., BTC, ETH, MATIC) or CoinGecko ID (e.g., bitcoin, ethereum, polygon).`);
                 return;
             }
@@ -3518,12 +3673,16 @@
 
             // Check if already in watchlist
             if (watchlist.some(item => item.coinId === coinId)) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
                 alert('This coin is already in your watchlist!');
                 return;
             }
 
             // Check if already in holdings
             if (holdings.some(h => h.coinId === coinId && !h.isCustom)) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
                 alert('You already own this coin! It\'s in your holdings.');
                 return;
             }
@@ -3555,10 +3714,14 @@
             }
 
             closeModal('addToWatchlistModal');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
             renderWatchlist();
             
             // Fetch prices to get the new coin's price
             fetchPrices();
+            
+            alert(`✅ Added ${coinId} to watchlist!`);
         }
 
         // Render watchlist
@@ -7674,7 +7837,7 @@
         // ============================================================
         // BUDGET SYSTEM (REDESIGNED WITH FREQUENCY)
         // ============================================================
-        let budgetData = { income: [], expenses: [] };
+        let budgetData = JSON.parse(localStorage.getItem('budgetData')) || { income: [], expenses: [] };
 
         function loadBudgetData() {
             const saved = localStorage.getItem('budgetData');
