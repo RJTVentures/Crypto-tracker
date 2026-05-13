@@ -1258,6 +1258,10 @@
             <p>Complete Finance Tracker <span style="opacity: 0.6; font-size: 0.85em;">(v2.1 - DCA + Tax + Mobile)</span></p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
+            <div id="tracker-fg-widget" style="text-align:center;padding:6px 14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:10px;min-width:90px">
+              <div style="font-size:0.68em;color:#a8d5c5;text-transform:uppercase;letter-spacing:0.8px;font-weight:500">Fear &amp; Greed</div>
+              <div id="tracker-fg-value" style="font-size:1.05em;font-weight:800;color:#ffd700">—</div>
+            </div>
             <button onclick="refreshPrices()" style="padding: 10px 20px; background: #d4af37; border: none; border-radius: 6px; color: #0a4d3c; cursor: pointer; font-size: 0.95em; font-weight: 600;">🔄 Refresh Prices</button>
         </div>
     </div>
@@ -1269,6 +1273,7 @@
         <button class="tab-button" onclick="switchTab(event, 'history')">📊 History</button>
         <button class="tab-button" onclick="switchTab(event, 'budget')">💵 Budget</button>
         <button class="tab-button" onclick="switchTab(event, 'tools')">🧰 Tools</button>
+        <button class="tab-button" onclick="switchTab(event, 'news')">📰 News</button>
         <button class="tab-button" onclick="switchTab(event, 'settings')">⚙️ Settings</button>
     </div>
     <div class="container">
@@ -1885,6 +1890,29 @@
                 <div style="margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
                     <p style="margin: 0; font-size: 0.9em; color: #991b1b;"><strong>Disclaimer:</strong> This tool provides transaction data formatted for ATO reporting. Always consult with a qualified tax professional or accountant for tax advice. This is not professional tax advice.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- NEWS TAB -->
+        <div id="news-tab" class="tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+                <div>
+                    <h2 style="color:#0f5c4a">📰 Crypto News</h2>
+                    <p style="font-size:0.88em;color:#6b7280;margin-top:4px">Live crypto news via CryptoPanic RSS · routed through local server</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <select id="tracker-news-filter" style="padding:8px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:0.9em;outline:none;background:white;cursor:pointer" onchange="loadTrackerNews()">
+                        <option value="">All News</option>
+                        <option value="bitcoin">₿ Bitcoin</option>
+                        <option value="markets">📊 Markets</option>
+                        <option value="altcoins">🪙 Altcoins</option>
+                        <option value="defi">🏦 DeFi</option>
+                    </select>
+                    <button onclick="loadTrackerNews()" style="padding:9px 18px;background:linear-gradient(135deg,#0f5c4a,#0a4d3c);color:#ffd700;border:none;border-radius:8px;font-size:0.9em;font-weight:600;cursor:pointer">↻ Refresh</button>
+                </div>
+            </div>
+            <div id="tracker-news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px">
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">Loading news…</div>
             </div>
         </div>
 
@@ -6471,7 +6499,7 @@
             const rate = parseFloat(document.getElementById('editLiabilityRate').value);
             const type = document.getElementById('editLiabilityType').value;
 
-            if (!name || !amount || amount < 0) {
+            if (!name || amount === null || amount === undefined || amount < 0) {
                 alert('Please fill in name and amount (amount must be 0 or greater)');
                 return;
             }
@@ -6500,8 +6528,8 @@
             const rate = parseFloat(document.getElementById('liabilityRate').value);
             const type = document.getElementById('liabilityType').value;
 
-            if (!name || !amount || amount <= 0) {
-                alert('Please fill in name and amount');
+            if (!name || amount === null || amount === undefined || amount < 0) {
+                alert('Please fill in name and amount (amount must be 0 or greater)');
                 return;
             }
 
@@ -7828,6 +7856,9 @@
                 populateDCACoinDropdown();
                 renderDCAPlans();
             }
+            if (tabName === 'news') {
+                loadTrackerNews();
+            }
             if (tabName === 'settings') {
                 const name = localStorage.getItem('portfolioName') || 'RJTVentures';
                 document.getElementById('settings-portfolio-name').value = name;
@@ -8175,6 +8206,82 @@
             } catch (error) {
                 newsDiv.innerHTML = '<p style="color: #999; padding: 20px; text-align: center; font-size: 0.9em;">Trending coins unavailable. This feature requires internet connection.</p>';
             }
+        }
+
+        // ============================================================
+        // FEAR & GREED INDEX
+        // ============================================================
+        async function fetchTrackerFearGreed() {
+            try {
+                const r = await fetch('/api/feargreed');
+                if (!r.ok) throw new Error('no endpoint');
+                const d = await r.json();
+                if (d.status === 'ok' && d.value != null) {
+                    const v = parseInt(d.value);
+                    const label = d.label || (v<=20?'Ext. Fear':v<=40?'Fear':v<=60?'Neutral':v<=80?'Greed':'Ext. Greed');
+                    const col = v<=20?'#ef4444':v<=40?'#f97316':v<=60?'#eab308':v<=80?'#84cc16':'#10b981';
+                    const el = document.getElementById('tracker-fg-value');
+                    if (el) el.innerHTML = `<span style="color:${col}">${v}</span><span style="font-size:0.72em;color:#d4af37;margin-left:4px">${label}</span>`;
+                }
+            } catch(e) { console.warn('Fear & Greed fetch failed:', e.message); }
+        }
+
+        // ============================================================
+        // WATCHLIST SERVER SYNC
+        // ============================================================
+        async function syncTrackerWatchlistToServer() {
+            try {
+                await fetch('/api/watchlist', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ watchlist: watchlist.map(w => w.symbol || w.coinId || '').filter(Boolean).map(s=>s.toUpperCase()) })
+                });
+            } catch(e) { /* silent */ }
+        }
+
+        // ============================================================
+        // NEWS TAB - CryptoPanic via server
+        // ============================================================
+        async function loadTrackerNews() {
+            const grid = document.getElementById('tracker-news-grid');
+            if (!grid) return;
+            const filter = document.getElementById('tracker-news-filter')?.value || '';
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">Loading news…</div>';
+            try {
+                const url = '/api/news' + (filter ? `?filter=${filter}` : '');
+                const r = await fetch(url);
+                if (!r.ok) throw new Error('Server returned ' + r.status);
+                const data = await r.json();
+                if (!data.articles || !data.articles.length) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af">No articles found.</div>';
+                    return;
+                }
+                grid.innerHTML = data.articles.map(a => {
+                    const ago = trackerTimeAgo(a.published_at);
+                    const sentColor = a.votes_positive > a.votes_negative ? '#10b981' : a.votes_negative > a.votes_positive ? '#ef4444' : '#6b7280';
+                    const sentLabel = a.votes_positive > a.votes_negative ? '📈 Bullish' : a.votes_negative > a.votes_positive ? '📉 Bearish' : '😐 Neutral';
+                    const coinTags = (a.currencies||[]).slice(0,4).map(c=>`<span style="background:#f0fdf4;color:#0f5c4a;padding:2px 8px;border-radius:10px;font-size:0.78em;font-weight:700">${c.code}</span>`).join(' ');
+                    return `<div style="background:white;border-radius:12px;padding:18px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:8px">
+                        <div style="font-size:0.78em;color:#9ca3af;display:flex;justify-content:space-between">
+                            <span>${a.source?.title||'Unknown source'}</span><span>${ago}</span>
+                        </div>
+                        <a href="${a.url}" target="_blank" rel="noopener" style="font-weight:600;color:#111827;font-size:0.92em;line-height:1.4;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#0f5c4a'" onmouseout="this.style.color='#111827'">${a.title}</a>
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+                            <div style="display:flex;gap:4px;flex-wrap:wrap">${coinTags}</div>
+                            <span style="font-size:0.78em;color:${sentColor};font-weight:600">${sentLabel}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                grid.innerHTML = `<div style="grid-column:1/-1;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;color:#b91c1c">
+                    ⚠️ News unavailable — ${e.message}<br><small style="color:#9ca3af;margin-top:6px;display:block">Ensure your server.py has the /api/news endpoint. See the server_patch.py file.</small>
+                </div>`;
+            }
+        }
+        function trackerTimeAgo(iso) {
+            const diff = Date.now() - new Date(iso).getTime();
+            const m = Math.floor(diff/60000), h = Math.floor(m/60), d = Math.floor(h/24);
+            if (d > 0) return d+'d ago'; if (h > 0) return h+'h ago'; return m+'m ago';
         }
 
         // ============================================================
@@ -8682,6 +8789,9 @@
             renderStakingList();
             renderLiabilitiesList();
             renderTraditionalAssets();
+            fetchTrackerFearGreed();
+            setTimeout(syncTrackerWatchlistToServer, 3000);
+            setInterval(fetchTrackerFearGreed, 5 * 60 * 1000);
             
             // Auto-refresh prices every 5 minutes
             setInterval(() => {
